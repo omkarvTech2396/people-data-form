@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>डेटा संकलन फॉर्म</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --primary: #2d5be3;
+    --primary-dark: #1e40af;
+    --text: #1f2430;
+    --muted: #6b7280;
+    --border: #e2e5ea;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Noto Sans Devanagari', 'Noto Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 28px 24px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  h1 { font-size: 21px; margin: 0 0 4px; }
+  p.sub { color: var(--muted); font-size: 14px; margin: 0 0 6px; }
+  p.note {
+    color: var(--primary-dark);
+    font-size: 13px;
+    background: #eef2ff;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin: 0 0 20px;
+  }
+  label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin: 16px 0 3px;
+    color: var(--text);
+  }
+  label .en {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--muted);
+    margin-top: 1px;
+  }
+  input, textarea {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+    background: #fafbfc;
+  }
+  input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: #fff;
+  }
+  textarea { resize: vertical; min-height: 70px; }
+  button {
+    width: 100%;
+    margin-top: 24px;
+    padding: 13px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover { background: var(--primary-dark); }
+  button:disabled { background: #a5b4d6; cursor: not-allowed; }
+  #status {
+    margin-top: 16px;
+    font-size: 14px;
+    text-align: center;
+    display: none;
+    padding: 10px;
+    border-radius: 8px;
+  }
+  #status.success { display: block; background: #ecfdf3; color: #067647; }
+  #status.error { display: block; background: #fef3f2; color: #b42318; }
+  .required::after { content: " *"; color: #d92d20; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>डेटा संकलन फॉर्म</h1>
+    <p class="sub">कृपया तुमची माहिती अचूक भरा.</p>
+    <p class="note">📝 तुम्ही खालील माहिती मराठी किंवा इंग्रजी — कोणत्याही भाषेत टाइप करू शकता.<br>
+    <span style="font-size:11px;">(You may fill this form in Marathi or English — either is fine.)</span></p>
+
+    <form id="dataForm">
+      <label class="required">पहिले नाव<span class="en">First Name</span></label>
+      <input type="text" id="firstName" required>
+
+      <label>मधले नाव<span class="en">Middle Name</span></label>
+      <input type="text" id="middleName">
+
+      <label class="required">आडनाव<span class="en">Last Name</span></label>
+      <input type="text" id="lastName" required>
+
+      <label class="required">जन्मतारीख<span class="en">Date of Birth</span></label>
+      <input type="date" id="dob" required>
+
+      <label class="required">पत्ता<span class="en">Address</span></label>
+      <textarea id="address" required></textarea>
+
+      <label class="required">जन्मस्थळ<span class="en">Place of Birth</span></label>
+      <input type="text" id="placeOfBirth" required placeholder="गाव/शहर, जिल्हा, राज्य">
+
+      <button type="submit" id="submitBtn">सादर करा (Submit)</button>
+      <div id="status"></div>
+    </form>
+  </div>
+
+<script>
+  // ⚠️ Same backend as before — no changes needed if already deployed
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxIQW6BXq9AL8PuZqsTeG_kYlA3croTig_kAbed1_lXh1_SLcikERrvPFOy4CIIV_Q/exec";
+
+  const form = document.getElementById('dataForm');
+  const statusEl = document.getElementById('status');
+  const submitBtn = document.getElementById('submitBtn');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.textContent = "सादर करत आहे...";
+    statusEl.style.display = 'none';
+
+    const params = new URLSearchParams();
+    params.append('firstName', document.getElementById('firstName').value.trim());
+    params.append('middleName', document.getElementById('middleName').value.trim());
+    params.append('lastName', document.getElementById('lastName').value.trim());
+    params.append('dob', document.getElementById('dob').value);
+    params.append('address', document.getElementById('address').value.trim());
+    params.append('placeOfBirth', document.getElementById('placeOfBirth').value.trim());
+
+    fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: params
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success') {
+          statusEl.className = 'success';
+          statusEl.textContent = "धन्यवाद! तुमची माहिती यशस्वीरित्या सादर झाली आहे.";
+          form.reset();
+        } else {
+          statusEl.className = 'error';
+          statusEl.textContent = "काहीतरी चूक झाली: " + (data.message || 'अज्ञात त्रुटी');
+        }
+        statusEl.style.display = 'block';
+      })
+      .catch(err => {
+        statusEl.className = 'error';
+        statusEl.textContent = "नेटवर्क त्रुटी. कृपया पुन्हा प्रयत्न करा.";
+        statusEl.style.display = 'block';
+      })
+      .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "सादर करा (Submit)";
+      });
+  });
+</script>
+</body>
+</html>
